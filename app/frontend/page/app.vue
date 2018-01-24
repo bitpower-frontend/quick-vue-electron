@@ -1,6 +1,6 @@
 <template>
   <div id="app" :style="paddingStyle">
-    <nav-menu v-show="!fullScreen"></nav-menu>
+    <nav-menu></nav-menu>
     <side-menu v-show="!fullScreen"></side-menu>
     <keep-alive :exclude="excludePages">
       <router-view></router-view>
@@ -28,7 +28,7 @@
       },
       paddingStyle (){
         return this.fullScreen ? {
-          paddingTop: 0, 
+          paddingTop: '50px',
           paddingLeft: 0,
           paddingRight: 0,
           paddingBottom: 0,
