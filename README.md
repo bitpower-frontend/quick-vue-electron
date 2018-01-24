@@ -1,5 +1,5 @@
 # quick-vue-electron
-A Tool for Building Classical Vue-Electron Project
+A Tool for Building Typical Vue-Electron Project
 
 ## Get started
 

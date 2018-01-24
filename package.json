@@ -1,7 +1,7 @@
 {
   "name": "quick-vue-electron",
   "version": "0.0.1",
-  "description": "A Tool for Building Classical Vue-Electron Project",
+  "description": "A Tool for Building Typical Vue-Electron Project",
   "main": "index.js",
   "scripts": {
     "build-dev": "webpack --progress --hide-modules --colors --config=app/frontend/build/dev.config.js",
