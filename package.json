@@ -1,0 +1,45 @@
+{
+  "name": "quick-vue-electron",
+  "version": "0.0.1",
+  "description": "A Tool for Building Classical Vue-Electron Project",
+  "main": "index.js",
+  "scripts": {
+    "build-dev": "webpack --progress --hide-modules --colors --config=app/frontend/build/dev.config.js",
+    "build-prod": "webpack --progress --hide-modules --colors --config=app/frontend/build/prod.config.js",
+    "hot-dev": "webpack-dev-server --hot --colors --config=app/frontend/build/dev.config.js"
+  },
+  "author": "Hisheng",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "axios": "^0.17.1",
+    "babel-loader": "^7.1.2",
+    "babel-minify-webpack-plugin": "^0.2.0",
+    "babel-plugin-syntax-jsx": "^6.18.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-vue-jsx": "^3.5.0",
+    "babel-preset-env": "^1.6.1",
+    "chalk": "^2.3.0",
+    "clean-webpack-plugin": "^0.1.17",
+    "css-loader": "^0.28.9",
+    "echarts": "^4.0.2",
+    "eslint": "^4.16.0",
+    "eslint-config-bitpower": "0.0.2",
+    "eslint-plugin-import": "^2.8.0",
+    "file-loader": "^1.1.6",
+    "iview": "^2.8.0",
+    "less": "^2.7.3",
+    "less-loader": "^4.0.5",
+    "lodash": "^4.17.4",
+    "style-loader": "^0.19.1",
+    "vue": "^2.5.13",
+    "vue-loader": "^13.7.0",
+    "vue-router": "^3.0.1",
+    "vue-template-compiler": "^2.5.13",
+    "vuex": "^3.0.1",
+    "webpack": "^3.10.0",
+    "webpack-dev-server": "^2.11.1"
+  }
+}

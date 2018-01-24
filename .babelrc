@@ -1,0 +1,20 @@
+{
+  "presets": [
+    ["env", {
+      "modules": false,
+      "useBuiltIns": true
+    }]
+  ],
+  "plugins": ["transform-object-rest-spread", "transform-vue-jsx"],
+  "env": {
+    "development": {
+      "presets": [
+        ["env", {
+          "targets": {
+            "browsers": ["chrome >= 53"]
+          },
+        }]
+      ]
+    }
+  }
+}
