@@ -11,6 +11,8 @@ import dataManageAnalysis from './page/data-manage/analysis.vue';
 import userManage from './page/user-manage/index.vue';
 import userManageRecord from './page/user-manage/record.vue';
 import userManagePrivileges from './page/user-manage/privileges.vue';
+// page design
+import pageDesign from './page/page-design/index.vue';
 
 Vue.use(VueRouter);
 
@@ -62,6 +64,7 @@ const router = new VueRouter({
         },
       ]
     },
+    { path: '/page-design', name: 'page-design', component: pageDesign },
   ]
 });
 
