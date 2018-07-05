@@ -1,4 +1,23 @@
-// this is a config demo for server, copy it to your local config file.
+/*
+@author Hisheng
+@since null
+@last-update 2018/04/13
+@description 应用全局配置文件
+*/
+
 module.exports = {
-  // 
+  // 应用名称
+  appName: 'Quick Vue Electron',
+  // 应用简短名称
+  shortName: 'QUE',
+  // 应用本地后台服务地址
+  host: 'localhost',
+  // 应用本地后台服务端口
+  port: 888,
+  // 应用本地后台服务端口（开发时 dev-server 请求转发）
+  devPort: 886,
+  // 应用当前环境（development 开发环境 / production 生产环境）
+  env: 'development',
+  // 应用当前使用的设备类型（desktop 桌面 / broswer 浏览器）
+  device: 'desktop',
 };

@@ -1,24 +1,26 @@
 import Vue from 'vue';
-import iview from 'iview';
+import iView from 'iview';
 import api from './api';
 import util from './util';
-import config from './config';
+import config from '../config.js';
 import store from './store';
 import filters from './filter';
-import { router, routes } from './router.js';
+import mixin from './mixin';
+import { router } from './router.js';
 import App from './page/app.vue';
 import './style/index.less';
 
-if(config.device === 'client' && window.require){
-  // 获取 electron 相关实例方法
+if(config.device === 'desktop' && window.require){
   const ET = {
     ipcRenderer: window.require('electron').ipcRenderer,
-    dialog: window.require('electron').remote.dialog,
+    remote: window.require('electron').remote,
+    shell: window.require('electron').shell,
   };
   window.ET = ET;
 }
 
 function installPlugin(plugin, name){
+  // exposed to global
   window[name] = plugin;
   plugin.install = function(Vue, options){
     Vue.prototype[name] = this;
@@ -26,17 +28,17 @@ function installPlugin(plugin, name){
   Vue.use(plugin);
 }
 
-installPlugin(api, 'api');
-installPlugin(util, 'util');
-installPlugin(config, 'config');
-// use iview
-Vue.use(iview);
-// global event hub
-Vue.use(new Vue(), 'eventHub');
+installPlugin(api, '$api');
+installPlugin(util, '$util');
+installPlugin(config, '$config');
+installPlugin(new Vue(), '$eventHub');
+
 // register filters
-Object.keys(filters).forEach(name => {
-  Vue.filter(name, filters[name]);
-});
+Vue.use(filters);
+// global mixin
+Vue.mixin(mixin);
+// use iview
+Vue.use(iView);
 
 const app = new Vue({
   el: '#app',

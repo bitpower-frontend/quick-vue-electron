@@ -4,12 +4,16 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
-    <title>App</title>
+    <title>Quick Vue Electron</title>
   </head>
   <body>
-    <div id="app"></div>
-
-    <script src="/static/dist/runtime.bundle.js"></script>
+    <div id="app">
+      <!-- 缺省文字，防止窗口出现白屏时的尴尬 -->
+      <p style="text-align: center;margin-top: 300px;color: white;font-size: 18px;">即将展现...</p>
+    </div>
+    <script>
+      window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
+    </script>
     <script src="/static/dist/vendor.bundle.js"></script>
     <script src="/static/dist/app.bundle.js"></script>
   </body>

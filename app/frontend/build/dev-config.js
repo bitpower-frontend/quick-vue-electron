@@ -1,28 +1,22 @@
 const path = require('path');
-const webpack = require('webpack');
-const baseConfig = require('./base.config.js');
+const baseConfig = require('./base-config.js');
 const buildConfig = require('./config.js');
-const appConfig = require('../config');
-
-baseConfig.plugins.push(new webpack.DefinePlugin({
-  'process.env.NODE_ENV': JSON.stringify('development')
-}));
+const appConfig = require('../../config.js');
 
 // webpack analyse
 if(buildConfig.analyse){
   const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
-  base.plugins.push(new BundleAnalyzerPlugin());
+  baseConfig.plugins.push(new BundleAnalyzerPlugin());
 }
 
 module.exports = Object.assign(baseConfig, {
   devServer:{
-    // host: appConfig.devServer.host,
-    port: appConfig.devServer.port,
+    port: appConfig.devPort,
     inline: true,
     contentBase: path.join(__dirname, '../../'),
     proxy: {
       '/api/*': {
-        target: `${appConfig.server.host}:${appConfig.server.port}`,
+        target: `http://${appConfig.host}:${appConfig.port}`,
         secure: false,
         changeOrigin: true,
       }
