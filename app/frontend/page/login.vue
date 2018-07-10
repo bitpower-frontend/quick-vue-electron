@@ -43,8 +43,8 @@
     components: {
       verifyCodeInput,
     },
-    data (){
-      return {        
+    data () {
+      return {
         // loginType
         loginType: 'accountLogin',
         // account login
@@ -74,53 +74,55 @@
     },
     computed: {
       // 动作，登录或者忘记密码 login/forget-password
-      action (){
+      action () {
         return this.$route.query.action || 'login';
       }
     },
-    mounted (){
+    mounted () {
       // if from relogin, disable enter key login
-      if(this.$route.query.from !== 'relogin'){
+      if (this.$route.query.from !== 'relogin') {
         document.addEventListener('keyup', this.onEnter);
       }
     },
-    beforeDestroy (){
+    beforeDestroy () {
       document.removeEventListener('keyup', this.onEnter);
     },
     methods: {
-      onEnter (e){
-        if(e.keyCode === 13){
+      onEnter (e) {
+        if (e.keyCode === 13) {
           this.login();
         }
         e.preventDefault();
       },
-      login (){
-        if(this.isLogining)return;
-        if(this.loginType === 'accountLogin'){ // 账号密码登录
-          if(!this.accountLogin.userName.trim() || !this.accountLogin.password.trim()){
+      login () {
+        if (this.isLogining) return;
+        if (this.loginType === 'accountLogin') { // 账号密码登录
+          if (!this.accountLogin.userName.trim() || !this.accountLogin.password.trim()) {
             this.$Message.warning('请输入有效的账号密码');
             return;
           }
           this.isLogining = true;
           this.$store.commit('showLoadingMask', '登录中...');
           this.$api.common.login(this.accountLogin.userName, this.accountLogin.password, this.rememberPassword)
-          .then(this.resolveRes)
-          .then(data => {
-            this.afterLogin(data);
-            console.log('>>> login', data);
-          }).catch(this.resolveError).finally(() => {
-            this.$store.commit('hideLoadingMask');
-            this.isLogining = false;
+            .then(this.resolveRes)
+            .then(data => {
+              this.afterLogin(data);
+              console.log('>>> login', data);
+            })
+            .catch(this.resolveError)
+            .finally(() => {
+              this.$store.commit('hideLoadingMask');
+              this.isLogining = false;
           });
-        }else if(this.loginType === 'mobileLogin'){ // 手机验证码登录
-          if(!this.mobileLogin.mobile.trim() || !this.mobileLogin.verifyCode.trim()){
+        } else if (this.loginType === 'mobileLogin') { // 手机验证码登录
+          if (!this.mobileLogin.mobile.trim() || !this.mobileLogin.verifyCode.trim()) {
             this.$Message.warning('请输入有效的手机号码和验证码');
             return;
           }
-          if(!this.$util.tool.isVerifyCodeValid(this.mobileLogin.verifyCode)){
+          if (!this.$util.tool.isVerifyCodeValid(this.mobileLogin.verifyCode)) {
             this.$Message.error('验证码格式不正确');
             return;
-          }else if(!this.$util.tool.isMobileValid(this.mobileLogin.mobile)){
+          } else if (!this.$util.tool.isMobileValid(this.mobileLogin.mobile)) {
             this.$Message.error('手机号格式不正确');
             return;
           }
@@ -128,19 +130,22 @@
           this.$store.commit('showLoadingMask', '登录中...');
           console.log('>>> 手机验证码登录', this.mobileLogin.mobile, this.mobileLogin.verifyCode);
           this.$api.common.mobileLogin(this.mobileLogin.mobile, this.mobileLogin.verifyCode)
-          .then(this.resolveRes)
-          .then(data => {
-            this.afterLogin(data);
-            console.log('>>> login', data);
-          }).catch(this.resolveError).finally(() => {
-            this.$store.commit('hideLoadingMask');
-            this.isLogining = false;
+            .then(this.resolveRes)
+            .then(data => {
+              this.afterLogin(data);
+              console.log('>>> login', data);
+            })
+            .catch(this.resolveError)
+            .finally(() => {
+              this.$store.commit('hideLoadingMask');
+              this.isLogining = false;
           });
         }
       },
-      afterLogin (data){
+      afterLogin (data) {
         this.$Message.success('登录成功');
-        if(this.$config.device === 'desktop'){
+        if (this.$config.device === 'desktop') {
+          /* global ET */
           ET.ipcRenderer.send('login');
         }
         const user = {
@@ -153,20 +158,20 @@
         this.$eventHub.$emit('app/login@loginSuccess');
         this.$router.push('/home');
       },
-      openLink (url){
-        if(this.$config.device === 'desktop'){
+      openLink (url) {
+        if (this.$config.device === 'desktop') {
           ET.shell.openExternal(url);
-        }else window.open(url);
+        } else window.open(url);
       },
       // send verify code
-      sendVerifyCode (mobile){
-        return function(){
+      sendVerifyCode (mobile) {
+        return function() {
           return new Promise((resolve, reject) => {
-            if(!mobile.trim()){
+            if (!mobile.trim()) {
               reject(new Error('请先填写手机号'));
-            }else if(!this.$util.tool.isMobileValid(mobile)){
+            } else if (!this.$util.tool.isMobileValid(mobile)) {
               reject(new Error('请输入有效的手机号'));
-            }else {
+            } else {
               this.$Message.info('验证码发送中');
               // mock request
               setTimeout(() => {
@@ -174,7 +179,7 @@
                 resolve();
               }, 2000);
             }
-          })
+          });
         };
       },
     },

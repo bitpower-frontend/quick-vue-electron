@@ -29,10 +29,10 @@
 
 <script>
   import { mapState, mapGetters } from 'vuex';
-import { setTimeout } from 'timers';
+
   export default {
     name: 'nav-menu',
-    data (){
+    data () {
       return {
         currentMenuName: 'home',
         maximized: false,
@@ -41,35 +41,35 @@ import { setTimeout } from 'timers';
     computed: {
       ...mapState(['user']),
       ...mapGetters(['logined']),
-      isDeskTop (){
+      isDeskTop () {
         return this.$config.device === 'desktop';
       },
     },
-    created (){
-      if(this.isDeskTop){
+    created () {
+      if (this.isDeskTop) {
         window.ET.ipcRenderer.on('maximizeMainWindowSuccess', (event, args) => {
           this.maximized = args === 'maximized';
         });
       }
       this.$eventHub.$on('windowResize', () => {
-        this.maximized = (screen.availWidth === window.outerWidth);
+        this.maximized = (window.screen.availWidth === window.outerWidth);
       });
     },
     methods: {
-      execute (action){
+      execute (action) {
         console.log('execute', action);
-        if(['close', 'maximize', 'minimize'].includes(action) && !this.isDeskTop){
+        if (['close', 'maximize', 'minimize'].includes(action) && !this.isDeskTop) {
           this.$Message.warning('浏览器环境下无法执行此操作');
           return;
         }
-        switch(action){
+        switch (action) {
           // 关闭
           case 'close':
             this.$Modal.confirm({
               title: '关闭程序',
               content: '您确定要关闭程序？',
               onOk: () => {
-                if(this.logined){
+                if (this.logined) {
                   this.$store.commit('showLoadingMask', '正在退出登录，请稍等...');
                   this.logout().then(() => {
                     ET.ipcRenderer.send('exit');
@@ -78,7 +78,7 @@ import { setTimeout } from 'timers';
                   }).finally(() => {
                     this.$store.commit('hideLoadingMask');
                   });
-                }else {
+                } else {
                   ET.ipcRenderer.send('exit');
                 }
               },
@@ -99,9 +99,10 @@ import { setTimeout } from 'timers';
               content: '您确定要登出？',
               onOk: () => {
                 this.logout().then(() => {
-                  if(this.isDeskTop){
+                  if (this.isDeskTop) {
+                    /* global ET */
                     ET.ipcRenderer.send('logout');
-                  }else window.location.reload(true);
+                  } else window.location.reload(true);
                 }).catch(err => {
                   this.$Message.error(`登出失败：${err.message}`);
                 });
@@ -117,13 +118,13 @@ import { setTimeout } from 'timers';
         };
       },
       // 退出登录
-      logout (from = 'normal'){
-        if(this.logined){
+      logout (from = 'normal') {
+        if (this.logined) {
           // mock
           return new Promise((resolve, reject) => {
             setTimeout(resolve, 2000);
           });
-        }else return Promise.reject(new Error('用户尚未登录'));
+        } else return Promise.reject(new Error('用户尚未登录'));
       },
     }
   };

@@ -21,26 +21,26 @@
         default: () => Promise.resolve(),
       },
     },
-    data (){
+    data () {
       return {
         sending: false,
         promptText: '获取验证码',
       };
     },
     methods: {
-      send (){
-        if(this.sending)return;
+      send () {
+        if (this.sending) return;
         this.sending = true;
         this.canSend().then(() => {
           let waitingTime = this.waitingTime;
           // this.sending = true;
           this.promptText = `验证码已发送(${waitingTime})`;
           const sendVerifyCodeIns = setInterval(() => {
-            if(waitingTime <= 0){
+            if (waitingTime <= 0) {
               clearInterval(sendVerifyCodeIns);
               this.sending = false;
               this.promptText = '获取验证码';
-            }else this.promptText = `验证码已发送(${--waitingTime})`;
+            } else this.promptText = `验证码已发送(${--waitingTime})`;
           }, 1000);
           this.$emit('send');
         }).catch(err => {
@@ -48,7 +48,7 @@
           this.sending = false;
         });
       },
-      onValueChange (e){
+      onValueChange (e) {
         // console.log('>>> veify-code-input value change', e.target.value);
         this.$emit('input', e.target.value);
       },

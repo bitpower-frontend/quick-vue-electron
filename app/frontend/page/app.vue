@@ -19,13 +19,14 @@
   import navMenu from '../component/nav-menu.vue';
   import sideMenu from '../component/side-menu.vue';
   import { mapState, mapGetters } from 'vuex';
+
   export default {
     name: 'app',
     components: {
       navMenu,
       sideMenu,
     },
-    data (){
+    data () {
       return {
         //
       };
@@ -33,10 +34,10 @@
     computed: {
       ...mapState(['loadingMaskVisible', 'loadingMaskText', 'keepAliveComponents']),
       ...mapGetters(['logined']),
-      fullScreen (){
+      fullScreen () {
         return ['login'].includes(this.$route.name);
       },
-      paddingStyle (){
+      paddingStyle () {
         return this.fullScreen ? {
           paddingTop: '50px',
           paddingLeft: 0,
@@ -50,13 +51,13 @@
         };
       },
     },
-    created (){
+    created () {
       this.listen('app/login@loginSuccess', () => {
         this.addRoutesDynamically();
       });
     },
     methods: {
-      addRoutesDynamically (){
+      addRoutesDynamically () {
         this.$router.addRoutes(this.$routesAfterLogin);
       },
     },

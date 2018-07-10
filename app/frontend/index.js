@@ -10,7 +10,7 @@ import { router } from './router.js';
 import App from './page/app.vue';
 import './style/index.less';
 
-if(config.device === 'desktop' && window.require){
+if (config.device === 'desktop' && window.require) {
   const ET = {
     ipcRenderer: window.require('electron').ipcRenderer,
     remote: window.require('electron').remote,
@@ -19,10 +19,10 @@ if(config.device === 'desktop' && window.require){
   window.ET = ET;
 }
 
-function installPlugin(plugin, name){
+function installPlugin(plugin, name) {
   // exposed to global
   window[name] = plugin;
-  plugin.install = function(Vue, options){
+  plugin.install = function(Vue, options) {
     Vue.prototype[name] = this;
   };
   Vue.use(plugin);

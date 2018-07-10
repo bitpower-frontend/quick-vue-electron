@@ -4,8 +4,8 @@ const buildConfig = require('./config.js');
 const appConfig = require('../../config.js');
 
 // webpack analyse
-if(buildConfig.analyse){
-  const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+if (buildConfig.analyse) {
+  const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
   baseConfig.plugins.push(new BundleAnalyzerPlugin());
 }
 

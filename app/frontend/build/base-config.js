@@ -2,7 +2,7 @@ const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 
-function resolve (xpath){
+function resolve (xpath) {
   return path.join(__dirname, '../../', xpath);
 }
 

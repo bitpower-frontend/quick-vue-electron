@@ -1,7 +1,7 @@
 // write your own vue global filters here
 
 export default {
-  install (Vue, options){
+  install (Vue, options) {
     // filter capitalize
     Vue.filter('capitalize', (value) => {
       if (!value) return '';

@@ -6,12 +6,13 @@
 
 <script>
   import pageHeader from '../component/page-header.vue';
+
   export default {
     name: 'home',
     components: {
       pageHeader,
     },
-    data (){
+    data () {
       return {
         //
       };

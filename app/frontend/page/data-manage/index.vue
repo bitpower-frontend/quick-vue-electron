@@ -9,7 +9,7 @@
 <script>
   export default {
     name: 'data-manage'
-  }
+  };
 </script>
 
 <style lang= "less">

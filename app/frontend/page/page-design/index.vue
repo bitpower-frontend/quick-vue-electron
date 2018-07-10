@@ -34,6 +34,7 @@
 
 <script>
   import pageHeader from '../../component/page-header.vue';
+
   export default {
     name: 'page-design',
     components: {

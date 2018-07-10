@@ -28,22 +28,22 @@ export const router = new VueRouter({
 
 // router hooks
 router.beforeEach((to, from, next) => {
-  if(window.app && window.app.$Loading){
+  if (window.app && window.app.$Loading) {
     window.app.$Loading.start();
   }
-  if(!store.getters.logined){
-    if(to.path !== '/login'){
+  if (!store.getters.logined) {
+    if (to.path !== '/login') {
       next('/login');
-    }else next();
-  }else {
-    if(to.path === '/login'){
+    } else next();
+  } else {
+    if (to.path === '/login') {
       next('/');
-    }else next();
+    } else next();
   }
 });
 
 router.afterEach((to, from) => {
-  if(window.app && window.app.$Loading){
+  if (window.app && window.app.$Loading) {
     window.app.$Loading.finish();
   }
 });

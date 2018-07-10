@@ -36,7 +36,7 @@
     "echarts": "^4.0.4",
     "electron-rebuild": "^1.8.1",
     "eslint": "^5.1.0",
-    "eslint-config-bitpower": "0.0.6",
+    "eslint-config-bitpower": "^0.0.7",
     "eslint-plugin-import": "^2.8.0",
     "file-loader": "^1.1.11",
     "iview": "^2.13.1",
@@ -52,6 +52,7 @@
     "vue-template-compiler": "^2.5.16",
     "vuex": "^3.0.1",
     "webpack": "^4.15.1",
+    "webpack-bundle-analyzer": "^2.13.1",
     "webpack-cli": "^3.0.8",
     "webpack-dev-server": "^3.1.4"
   }

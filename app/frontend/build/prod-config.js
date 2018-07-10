@@ -16,8 +16,8 @@ baseConfig.plugins.push(new UglifyJsPlugin({
 }));
 
 // webpack analyse
-if(buildConfig.analyse){
-  const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+if (buildConfig.analyse) {
+  const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
   baseConfig.plugins.push(new BundleAnalyzerPlugin());
 }
 

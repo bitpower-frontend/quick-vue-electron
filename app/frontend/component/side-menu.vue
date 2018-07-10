@@ -19,7 +19,7 @@
 <script>
   export default {
     name: 'side-menu',
-    data (){
+    data () {
       return {
         menus: [
           {
@@ -58,7 +58,7 @@
       };
     },
     methods: {
-      selectMenu (name){
+      selectMenu (name) {
         this.$router.push(name);
       },
     }
