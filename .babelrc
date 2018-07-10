@@ -2,19 +2,11 @@
   "presets": [
     ["env", {
       "modules": false,
-      "useBuiltIns": true
+      "useBuiltIns": true,
+      "targets": {
+        "chrome": 61
+      }
     }]
   ],
-  "plugins": ["transform-object-rest-spread", "transform-vue-jsx"],
-  "env": {
-    "development": {
-      "presets": [
-        ["env", {
-          "targets": {
-            "browsers": ["chrome >= 53"]
-          },
-        }]
-      ]
-    }
-  }
+  "plugins": ["transform-object-rest-spread", "transform-vue-jsx"]
 }

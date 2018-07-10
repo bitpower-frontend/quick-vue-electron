@@ -1,6 +1,6 @@
 <template>
-  <Menu theme="dark" :active-name="$route.path" id="side-menu" @on-select="selectMenu">
-    <div v-for="menu,i in menus" :key="i">
+  <Menu :active-name="$route.path" id="side-menu" @on-select="selectMenu" width="150">
+    <div v-for="(menu,i) in menus" :key="i">
       <Menu-item :name="menu.path" v-if="!(menu.subMenus && menu.subMenus.length)">
         {{ menu.name }}
       </Menu-item>
@@ -8,7 +8,7 @@
         <template slot="title">
           {{ menu.name }}
         </template>
-        <Menu-item :name="subMenu.path" v-for="subMenu,j in menu.subMenus" :key="subMenu.path">
+        <Menu-item :name="subMenu.path" v-for="(subMenu,j) in menu.subMenus" :key="subMenu.path">
           {{ subMenu.name }}
         </Menu-item>
       </Submenu>
@@ -67,6 +67,6 @@
 
 <style lang= "less">
   #side-menu {
-    /**/
+    box-shadow: 1px 2px 10px 1px rgba(0,0,0,.1);
   }
 </style>

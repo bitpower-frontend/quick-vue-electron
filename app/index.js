@@ -1,7 +1,7 @@
 /*
 @author Hisheng
 @since null
-@last-update 2018/04/13
+@last-update 2018/07/10
 @description 应用启动文件
 */
 
@@ -12,41 +12,43 @@ const compression = require('compression');
 const router = require('./router.js');
 const config = require('./config');
 const Logger = require('./logger.js');
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const {
+  app, BrowserWindow, ipcMain, dialog
+} = require('electron');
 
-const desktop = app;
-let mainWindow = null;
-let server = null;
-const URL = 'http://' + config.host + ':' + (config.env === 'production' ? config.port : config.devPort);
+const desktop = app;    // desktop as alias of electron instance
+let mainWindow = null;  // main desktop window
+let nodeServer = null;  // node server
+const URL = `http://${config.host}:${(config.env === 'production' ? config.port : config.devPort)}`;
 const logger = new Logger(config.appName);
 
 desktop.setName(config.appName);
-desktop.setAppUserModelId('com.yoursite.desktop');
+desktop.setAppUserModelId(config.appId);
 
 // start node server using express
-const startNodeServer = function(){
+function startNodeServer() {
   return new Promise((resolve, reject) => {
     try {
-      server = express();
-      server.use(compression());
-      server.use('/static', express.static(path.join(__dirname, 'static')));
-      server.use(bodyParser.json({ limit: (8 * 1024) + 'kb' }));
-      server.use(bodyParser.urlencoded({ extended: false }));
+      nodeServer = express();
+      nodeServer.use(compression()); // for gzip
+      nodeServer.use('/static', express.static(path.join(__dirname, 'static')));
+      nodeServer.use(bodyParser.json({ limit: (8 * 1024) + 'kb' })); // json body size limited, 8MB
+      nodeServer.use(bodyParser.urlencoded({ extended: false }));
       // set router
-      router(server);
+      router(nodeServer);
       // start listen
-      server.listen(config.port, config.host, () => {
-        logger.info(`Node server is running at ${config.host}:${config.port}`);
-        resolve(server);
+      nodeServer.listen(config.port, config.host, () => {
+        logger.info(`node server is running at ${config.host}:${config.port}`);
+        resolve();
       });
-    }catch (err){
+    } catch (err) {
       reject(err);
     }
   });
-};
+}
 
-// init desktop application
-const initDesktop = function(){
+// init desktop application, but not show
+function initDesktop() {
   desktop.on('ready', () => {
     createMainWindow();
   });
@@ -64,23 +66,23 @@ const initDesktop = function(){
   });
 
   // informed to close main window
-  ipcMain.on('closeMainWindow', (event, arg) => {
+  ipcMain.on('closeMainWindow', () => {
     mainWindow.close();
   });
 
   // maximize window
-  ipcMain.on('maximizeMainWindow', (event, arg) => {
-    if(mainWindow.isMaximized()){
+  ipcMain.on('maximizeMainWindow', (event) => {
+    if (mainWindow.isMaximized()) {
       mainWindow.restore();
       event.sender.send('maximizeMainWindowSuccess', 'restored');
-    }else {
+    } else {
       mainWindow.maximize();
       event.sender.send('maximizeMainWindowSuccess', 'maximized');
     }
   });
 
   // minimize window
-  ipcMain.on('minimizeMainWindow', (event, arg) => {
+  ipcMain.on('minimizeMainWindow', () => {
     mainWindow.minimize();
   });
 
@@ -89,63 +91,63 @@ const initDesktop = function(){
     mainWindow.webContents.downloadURL(arg.url);
   });
 
-  // informed to execute specified method
+  // asked to execute specified method
   ipcMain.on('execute', (event, arg) => {
     const method = mainWindow[arg.method];
-    if(method){
+    if (method) {
       method.apply(mainWindow, arg.params || []);
     }
   });
 
   // asked to reload main window webcontents
-  ipcMain.on('reload', (event, arg) => {
+  ipcMain.on('reload', () => {
     mainWindow.webContents.reload();
   });
 
   // asked to exit application
-  ipcMain.on('exit', (event, arg) => {
+  ipcMain.on('exit', () => {
     quitGracefully();
   });
 
   // asked to relaunch application
-  ipcMain.on('relaunch', (event, arg) => {
+  ipcMain.on('relaunch', () => {
     desktop.relaunch();
     desktop.quit();
   });
 
   // informed login
-  ipcMain.on('login', (event, arg) => {
+  ipcMain.on('login', () => {
     // do something when user login
   });
 
   // informed logout
-  ipcMain.on('logout', (event, arg) => {
+  ipcMain.on('logout', () => {
     // do something when user logout
   });
 
   // asked to open devtools
-  ipcMain.on('openDevTools', (event, arg) => {
+  ipcMain.on('openDevTools', () => {
     mainWindow.webContents.openDevTools();
   });
 
-  // 前端通过 H5 API：navigator.onLine 判断网络情况，ipcRender 发送事件到 ipcMain
-  /* ipcMain.on('online-status-changed', function(event, status) {
+  // use H5 API：navigator.onLine to check network condition, receice status from ipcRender
+  /* ipcMain.on('onlineStatusChanged', function(event, status) {
     if (status === 'online') {
-      // 加载线上 URL
+      // load online URL
     } else {
-      // 加载离线页面
+      // load offline URL
     }
   }); */
-};
+}
 
 // show desktop
-function showDesktop (){
+function showDesktop () {
   mainWindow.show();
   mainWindow.maximize();
 }
 
 // create main window
-function createMainWindow(){
+function createMainWindow() {
   const windowConfig = {
     show: false,
     minWidth: 1440,
@@ -175,7 +177,7 @@ function createMainWindow(){
 }
 
 // prevent default behavior than not allowed on desktop
-function preventDefault (){
+function preventDefault () {
   // disable drag file into window
   mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
   // disable user zoom page
@@ -185,11 +187,11 @@ function preventDefault (){
 }
 
 // quit application gracefully
-function quitGracefully (){
+function quitGracefully () {
   try {
     mainWindow.close();
     desktop.quit();
-  }catch (e){
+  } catch (e) {
     logger.info('can not quit qracefully, trying to kill the process');
     process.exit();
   }
@@ -198,9 +200,9 @@ function quitGracefully (){
 // for global uncaught exceptions
 process.on('uncaughtException', (err) => {
   console.log('>>> [Error]', err, err.code);
-  if(err.code === 'EADDRINUSE'){
+  if (err.code === 'EADDRINUSE') {
     dialog.showErrorBox('端口占用', `端口 ${config.port} 已被其他程序占用，程序即将退出。`);
-  }else {
+  } else {
     dialog.showErrorBox('程序出错', err.message);
   }
   quitGracefully();
@@ -208,21 +210,21 @@ process.on('uncaughtException', (err) => {
 
 
 // start application
-if(config.device === 'desktop'){
+if (config.device === 'desktop') {
   initDesktop();
   logger.info('desktop inited');
 }
 
-startNodeServer().then(server => {
+startNodeServer().then(() => {
   // load dll if need
-  /* logger.info('loading dll');
-  return loadDll(server); */
+  if (config.dllName) {
+    const loadDll = require('./dll.js');
+    logger.info('loading dll');
+    return loadDll(nodeServer, config.dllName);
+  }
 }).then(() => {
-  // logger.info('dll loaded');
-  if(config.device === 'desktop'){
+  if (config.device === 'desktop') {
     showDesktop();
     logger.info('desktop shown');
   }
-}).catch(err => {
-  throw new Error(err.toString());
 });

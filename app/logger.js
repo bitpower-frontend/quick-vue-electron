@@ -2,14 +2,14 @@ const chalk = require('chalk');
 
 module.exports = class Logger {
 
-  constructor(flag='App') {
+  constructor(flag = 'App') {
     this.color = {
       red: chalk.hex('#f04134'),
       orange: chalk.hex('#ffbf00'),
       green: chalk.hex('#00a854'),
       blue: chalk.hex('#108ee9')
     };
-    this.padLeft = `>>> ${flag} `;
+    this.padLeft = `>>> ${flag}: `;
   }
 
   static get chalk() {

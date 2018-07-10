@@ -1,6 +1,6 @@
 <template>
   <div id="nav-menu">
-    <a href='javascript:;' class="logo" @click='showModal = true'>
+    <a href='javascript:;' class="logo" @click="$router.push('/')">
       <img src="../../static/img/logo.png" alt="">
       <span class="title">{{ $config.appName }}</span>
     </a>
@@ -36,7 +36,6 @@ import { setTimeout } from 'timers';
       return {
         currentMenuName: 'home',
         maximized: false,
-        showModal: false,
       };
     },
     computed: {

@@ -44,14 +44,21 @@
           paddingBottom: 0,
         } : {
           paddingTop: '60px', 
-          paddingLeft: '250px',
+          paddingLeft: '150px',
           paddingRight: '10px',
           paddingBottom: '10px',
         };
       },
     },
     created (){
-      //
+      this.listen('app/login@loginSuccess', () => {
+        this.addRoutesDynamically();
+      });
+    },
+    methods: {
+      addRoutesDynamically (){
+        this.$router.addRoutes(this.$routesAfterLogin);
+      },
     },
   };
 </script>
@@ -66,10 +73,11 @@
       top: 0;
       left: 0;
       right: 0;
+      z-index: 999;
     }
     #side-menu {
       position: absolute;
-      top: 50px;
+      top: 51px;
       left: 0;
       bottom: 0;
     }

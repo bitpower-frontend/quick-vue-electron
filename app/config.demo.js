@@ -6,6 +6,8 @@
 */
 
 module.exports = {
+  // 应用ID
+  appId: 'com.anysitename.desktop',
   // 应用名称
   appName: 'Quick Vue Electron',
   // 应用简短名称
@@ -20,4 +22,6 @@ module.exports = {
   env: 'development',
   // 应用当前使用的设备类型（desktop 桌面 / broswer 浏览器）
   device: 'desktop',
+  // 加载的 DLL 名称
+  dllName: '',
 };
