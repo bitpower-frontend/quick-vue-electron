@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width">
+    <title>Quick Vue Electron</title>
+  </head>
+  <body>
+    <div id="app">
+      <!-- 缺省文字，防止窗口出现白屏时的尴尬 -->
+      <p style="text-align: center;margin-top: 300px;color: white;font-size: 18px;" id="state">您已断网，请检查您的网络状况。</p>
+      <p>
+        <a href="javascript:onlineStatusChange();" class="btn">尝试重连</a>
+        <a href="javascript:exit();" class="btn exit">关闭程序</a>
+      </p>
+      <style>
+        p {
+          text-align: center;
+        }
+        .btn {
+          display: inline-block;
+          margin-bottom: 0;
+          font-weight: 400;
+          text-align: center;
+          -ms-touch-action: manipulation;
+          touch-action: manipulation;
+          cursor: pointer;
+          background-image: none;
+          border: 1px solid transparent;
+          white-space: nowrap;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          user-select: none;
+          padding: 5px 15px 6px;
+          font-size: 12px;
+          border-radius: 4px;
+          transition: color .2s linear,background-color .2s linear,border .2s linear,box-shadow .2s linear;
+          color: #fff;
+          background-color: #f95655;
+          border-color: #f95655;
+          text-decoration: none;
+        }
+        .btn:hover {
+          color: #fff;
+          background-color: #fc2c2c;
+          border-color: #fc2c2c;
+        }
+        .btn.exit {
+          margin-left: 5px;
+          background-color: transparent;
+          border-color: #222;
+        }
+      </style>
+    </div>
+    <script>
+      // 网络状况监测
+      const { ipcRenderer } = require('electron');
+      function onlineStatusChange () {
+        ipcRenderer.send('online-status-changed', navigator.onLine);
+      }
+      window.addEventListener('online', onlineStatusChange);
+      window.addEventListener('offline', onlineStatusChange);
+      function exit () {
+        ipcRenderer.send('exit');
+      }
+    </script>
+  </body>
+</html>

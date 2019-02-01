@@ -1,16 +1,11 @@
 /*
 @author Hisheng
 @since null
-@last-update 2018/07/10
+@last-update 2019/01/30
 @description 用于加载后台 dll 并提供向 dll 发起请求的方法
 */
 
 const ffi = require('ffi');
-const cuid = require('cuid');
-const config = require('./config.js');
-const Logger = require('./logger.js');
-
-const logger = new Logger(config.appName);
 
 // 获取传递的字符串长度
 function getStringBytes(str) {
@@ -34,56 +29,66 @@ function getStringBytes(str) {
 }
 
 // 加载 dll
-function loadDll(nodeServer, dllName) {
-  const server = nodeServer;
+function loadDll(app) {
+  const server = app.$server;
+  const logger = app.$logger;
+  const config = app.$config;
+
   server.dll = {
-    service: ffi.Library(dllName, {
+    service: ffi.Library(config.dllName, {
       InitDll: ['void', ['string']],
       registJsCallback: ['void', ['pointer']],
       JsInvokeCppFunc: ['void', ['int', 'string', 'int']],
-      // SubscribeJsCallback: ['void', ['pointer']],
+      SubscribeJsCallback: ['void', ['pointer']],
+      EndDll: ['void', ['pointer']]
     }),
     requestMap: {}, // 请求回调栈
+    requestId: 0,   // 请求标识ID
   };
-  // 当 C++ 需要返回数据给 node 时，会调用此方法，通过 requestId 执行对于的回调函数
-  server.dll.requestCallback = ffi.Callback('void', ['int', 'string', 'int'], (requestId, msg) => {
-    logger.info(`[${requestId}] dll requestCallback trigged`);
+  // 当 C++ 需要返回数据给 node 时，会调用此方法，通过 requestId 执行对应的回调函数
+  server.dll.requestCallback = ffi.Callback('void', ['int', 'string', 'int'], (requestId, msg, msgLen) => {
+    console.log(`>>> [${requestId}] dll requestCallback trigged`);
     if (requestId && server.dll.requestMap[requestId]) {
       server.dll.requestMap[requestId](msg);
       delete server.dll.requestMap[requestId];
     }
   });
+  // 注册 C++ 普通消息回调
   server.dll.service.registJsCallback(server.dll.requestCallback);
-  // C++ 向 Node 主动发消息
-  /* server.dll.service.SubscribeJsCallback(ffi.Callback('void', ['string'], (msg) => {
-    console.log('>>>>>>>>>>>>>>>>');
-    console.log(msg);
-    console.log('>>>>>>>>>>>>>>>>');
-  })); */
+  // 将 C++ 推送的消息通过 socket 转发给界面
+  server.dll.DllPushCallback = ffi.Callback('void', ['string'], (msg) => {
+    server.socket.broadcast(msg);
+  });
+  // 注册 C++ 推送回调
+  server.dll.service.SubscribeJsCallback(server.dll.DllPushCallback);
   // 向 C++ 发送请求
-  server.dll.sendRequest = function (data) {
-    return new Promise((resolve, reject) => {
+  global.sendDllRequest = server.dll.sendRequest = function (data) {
+    return new Promise((xresolve, xreject) => {
+      // 检查入参是否是有效的 json 对象
+      if (typeof data !== 'object') xreject(new TypeError(`无效的请求数据格式：${typeof data}`));
       try {
         // 注册回调函数
-        const reqId = cuid();
-        server.dll.requestMap[reqId] = function (content) {
-          console.log(`============ [${config.shortName}] [${reqId}] request callback invoked. ============\n`, '\n');
-          resolve(JSON.parse(content));
+        ++server.dll.requestId;
+        server.dll.requestMap[server.dll.requestId] = function (content) {
+          content = JSON.parse(content);
+          console.log(`============ [${config.shortName}] [${server.dll.requestId}] request callback invoked ============\n`/* , JSON.stringify(content, null, 2) */, '\n');
+          xresolve(content);
         };
         data = JSON.stringify(data);
-        console.log(`\n============ [${config.shortName}] [${reqId}] request sent to dll ============\n`, data, '\n');
+        console.log(`\n============ [${config.shortName}] [${server.dll.requestId}] request send to dll ============\n`, data, '\n');
         // 调用 C++ 相关方法
-        server.dll.service.JsInvokeCppFunc(reqId, data, getStringBytes(data));
+        server.dll.service.JsInvokeCppFunc(server.dll.requestId, data, getStringBytes(data));
       } catch (e) {
         console.log('>>> sendRequest error:', e);
-        reject(e);
+        xreject(e);
       }
     });
   };
-  // dll 初始化
-  logger.info('dll initing');
+  // DLL 初始化
+  logger.info('Dll initing');
+  // C++ DLL 初始化，这是一个同步的操作
   server.dll.service.InitDll(config.shortName);
-  logger.info('dll inited');
+  logger.info('Dll inited');
 }
 
 module.exports = loadDll;

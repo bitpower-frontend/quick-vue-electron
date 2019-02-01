@@ -1,152 +1,182 @@
 /*
 @author Hisheng
 @since null
-@last-update 2018/07/10
-@description 应用启动文件
+@last-update 2019/01/30
+@description Application Startup Entry
 */
 
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
-const bodyParser = require('body-parser');
 const compression = require('compression');
+const bodyParser = require('body-parser');
 const router = require('./router.js');
 const config = require('./config');
 const Logger = require('./logger.js');
-const {
-  app, BrowserWindow, ipcMain, dialog
-} = require('electron');
+if (config.dllName) {
+  const loadDll = require('./dll.js');
+}
+/* eslint-disable import/no-unresolved */
+const { app, BrowserWindow, ipcMain, dialog, } = require('electron');
 
-const desktop = app;    // desktop as alias of electron instance
-let mainWindow = null;  // main desktop window
-let nodeServer = null;  // node server
-const URL = `http://${config.host}:${(config.env === 'production' ? config.port : config.devPort)}`;
+// const initSocket = require('./socket.js');
+
+app.$mainWindow = null;
+app.$server = null;
+app.$config = config;
+
 const logger = new Logger(config.appName);
+app.$logger = logger;
 
-desktop.setName(config.appName);
-desktop.setAppUserModelId(config.appId);
+app.setName(config.appName);
+app.setAppUserModelId(config.appId);
+
+// 线上、初始化、离线页面
+const ONLINE_URL = `http://${config.host}:${config.env === 'production' ? config.port : config.devPort}`;
+const INIT_URL = 'file://' + path.resolve(__dirname, './init.html');
+const OFFLINE_URL = 'file://' + path.resolve(__dirname, './offline.html');
+
+// 创建缓存目录
+const CACHE_DIR = (config.cache && config.cache.folder) || path.join(__dirname, './cache');
+if (!fs.existsSync(CACHE_DIR)) {
+  fs.mkdirSync(CACHE_DIR);
+}
 
 // start node server using express
-function startNodeServer() {
+const startNodeServer = function() {
   return new Promise((resolve, reject) => {
     try {
-      nodeServer = express();
-      nodeServer.use(compression()); // for gzip
-      nodeServer.use('/static', express.static(path.join(__dirname, 'static')));
-      nodeServer.use(bodyParser.json({ limit: (8 * 1024) + 'kb' })); // json body size limited, 8MB
-      nodeServer.use(bodyParser.urlencoded({ extended: false }));
+      app.$server = express();
+      app.$server.use(compression());
+      app.$server.use('/static', express.static(path.join(__dirname, 'static')));
+      app.$server.use(bodyParser.json({ limit: config.jsonLimitSize + 'kb' }));
+      app.$server.use(bodyParser.urlencoded({ extended: false }));
       // set router
-      router(nodeServer);
+      router(app.$server);
+      // initSocket(app.$server);
       // start listen
-      nodeServer.listen(config.port, config.host, () => {
-        logger.info(`node server is running at ${config.host}:${config.port}`);
+      app.$server.listen(config.port, config.host, () => {
+        logger.info(`Node server is running at ${config.host}:${config.port}`);
         resolve();
       });
     } catch (err) {
       reject(err);
     }
   });
-}
+};
 
-// init desktop application, but not show
-function initDesktop() {
-  desktop.on('ready', () => {
+// init app application
+const initDesktop = function() {
+  app.on('ready', () => {
     createMainWindow();
   });
 
-  desktop.on('window-all-closed', () => {
+  app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
-      desktop.quit();
+      app.quit();
     }
   });
 
-  desktop.on('activate', () => {
-    if (mainWindow === null) {
+  app.on('activate', () => {
+    if (app.$mainWindow === null) {
       createMainWindow();
     }
   });
 
-  // informed to close main window
-  ipcMain.on('closeMainWindow', () => {
-    mainWindow.close();
+  app.on('gpu-process-crashed', (event) => {
+    quitGracefully();
+  });
+
+  // close main window
+  ipcMain.on('closeMainWindow', (event, arg) => {
+    app.$mainWindow.close();
   });
 
   // maximize window
-  ipcMain.on('maximizeMainWindow', (event) => {
-    if (mainWindow.isMaximized()) {
-      mainWindow.restore();
+  ipcMain.on('maximizeMainWindow', (event, arg) => {
+    if (app.$mainWindow.isMaximized()) {
+      app.$mainWindow.restore();
       event.sender.send('maximizeMainWindowSuccess', 'restored');
     } else {
-      mainWindow.maximize();
+      app.$mainWindow.maximize();
       event.sender.send('maximizeMainWindowSuccess', 'maximized');
     }
   });
 
   // minimize window
-  ipcMain.on('minimizeMainWindow', () => {
-    mainWindow.minimize();
+  ipcMain.on('minimizeMainWindow', (event, arg) => {
+    app.$mainWindow.minimize();
   });
 
-  // asked to download
-  ipcMain.on('download', (event, arg) => {
-    mainWindow.webContents.downloadURL(arg.url);
+  // 用于下载防止 window.open 导致的空白窗口
+  ipcMain.on('create-download-window', (event, arg) => {
+    console.log('>>> create-download-window', arg.url);
+    app.$mainWindow.webContents.downloadURL(arg.url);
   });
 
-  // asked to execute specified method
+  // 渲染界面通知主进程执行相关方法
   ipcMain.on('execute', (event, arg) => {
-    const method = mainWindow[arg.method];
-    if (method) {
-      method.apply(mainWindow, arg.params || []);
-    }
+    const action = app.$mainWindow[arg.action];
+    action.apply(app.$mainWindow, arg.params || []);
   });
 
-  // asked to reload main window webcontents
-  ipcMain.on('reload', () => {
-    mainWindow.webContents.reload();
+  // 刷新界面
+  ipcMain.on('reload', (event, arg) => {
+    app.$mainWindow.webContents.reload();
   });
 
-  // asked to exit application
-  ipcMain.on('exit', () => {
+  // 退出程序
+  ipcMain.on('exit', (event, arg) => {
     quitGracefully();
   });
 
-  // asked to relaunch application
-  ipcMain.on('relaunch', () => {
-    desktop.relaunch();
-    desktop.quit();
+  // 重启程序
+  ipcMain.on('relaunch', (event, arg) => {
+    app.relaunch();
+    app.quit();
   });
 
-  // informed login
-  ipcMain.on('login', () => {
-    // do something when user login
-  });
-
-  // informed logout
-  ipcMain.on('logout', () => {
-    // do something when user logout
-  });
-
-  // asked to open devtools
-  ipcMain.on('openDevTools', () => {
-    mainWindow.webContents.openDevTools();
-  });
-
-  // use H5 API：navigator.onLine to check network condition, receice status from ipcRender
-  /* ipcMain.on('onlineStatusChanged', function(event, status) {
-    if (status === 'online') {
-      // load online URL
+  // 前端通过 H5 API：navigator.onLine 判断网络情况，ipcRender 发送事件到 ipcMain
+  ipcMain.on('online-status-changed', function(event, online) {
+    if (!config.offline.enabled) return;
+    if (online) {
+      // 加载线上 URL
+      app.$mainWindow.loadURL(ONLINE_URL);
     } else {
-      // load offline URL
+      // 加载离线页面
+      app.$mainWindow.loadURL(config.offline.page || OFFLINE_URL);
     }
-  }); */
+  });
+
+  // 通过主进程，渲染进程通信的方式（IPC）发起 dll 请求
+  ipcMain.on('sendDllRequest', async (event, arg) => {
+    try {
+      const resData = await app.$server.dll.sendRequest(arg.data);
+      event.sender.send('sendDllRequestRes', {
+        id: arg.id,
+        data: resData,
+      });
+    } catch (err) {
+      event.sender.send('sendDllRequestRes', {
+        id: arg.id,
+        err,
+      });
+    }
+  });
+
+};
+
+// 阻止界面默认行为
+function preventDefault () {
+  // 阻止文件拖拽进界面
+  app.$mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
+  // 阻止界面缩放
+  app.$mainWindow.webContents.setZoomFactor(1);
+  app.$mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
+  app.$mainWindow.webContents.setLayoutZoomLevelLimits(0, 0);
 }
 
-// show desktop
-function showDesktop () {
-  mainWindow.show();
-  mainWindow.maximize();
-}
-
-// create main window
+// 创建主渲染界面
 function createMainWindow() {
   const windowConfig = {
     show: false,
@@ -156,75 +186,84 @@ function createMainWindow() {
     height: 940,
     autoHideMenuBar: true,
     frame: false,
-    icon: path.join(__dirname, '../logo.png'),
-    backgroundColor: '#454545',
+    icon: path.join(__dirname, '../app.ico'),
+    backgroundColor: '#282c34',
     title: config.appName,
     /*webPreferences: {
       devTools: !(config.env === 'production'),
     }*/
   };
-  mainWindow = new BrowserWindow(windowConfig);
-  mainWindow.once('ready-to-show', () => {
-    logger.info('main window is ready to show');
+  app.$mainWindow = new BrowserWindow(windowConfig);
+  // 加载 chrome 插件
+  if (config.env === 'development') {
+    BrowserWindow.addDevToolsExtension(path.join(__dirname, './extensions/vue-devtools/4.1.5_0'));
+  }
+  app.$mainWindow.once('ready-to-show', () => {
+    logger.info('Main window is ready to show');
+    app.$mainWindow.show();
+    bootstrap();
   });
-  mainWindow.webContents.on('did-finish-load', () => {
+  // 界面加载完毕时
+  app.$mainWindow.webContents.on('did-finish-load', () => {
     preventDefault();
   });
-  mainWindow.on('closed', () => {
-    mainWindow = null;
+  app.$mainWindow.on('closed', () => {
+    app.$mainWindow = null;
   });
-  mainWindow.loadURL(URL);
+  // 先显示初始化页面
+  app.$mainWindow.loadFile(INIT_URL);
 }
 
-// prevent default behavior than not allowed on desktop
-function preventDefault () {
-  // disable drag file into window
-  mainWindow.webContents.on('will-navigate', (event) => event.preventDefault());
-  // disable user zoom page
-  mainWindow.webContents.setZoomFactor(1);
-  mainWindow.webContents.setVisualZoomLevelLimits(1, 1);
-  mainWindow.webContents.setLayoutZoomLevelLimits(0, 0);
-}
-
-// quit application gracefully
+// 以一种优雅的方式退出程序
 function quitGracefully () {
   try {
-    mainWindow.close();
-    desktop.quit();
+    app.$mainWindow.close();
+    app.quit();
   } catch (e) {
-    logger.info('can not quit qracefully, trying to kill the process');
+    logger.info('Can not quit qracefully, trying to kill the process');
     process.exit();
   }
 }
 
-// for global uncaught exceptions
+// 加入错误处理，解决端口占用等问题
 process.on('uncaughtException', (err) => {
   console.log('>>> [Error]', err, err.code);
   if (err.code === 'EADDRINUSE') {
+    console.error('>>> address has been used.');
     dialog.showErrorBox('端口占用', `端口 ${config.port} 已被其他程序占用，程序即将退出。`);
   } else {
-    dialog.showErrorBox('程序出错', err.message);
+    dialog.showErrorBox('程序出错', err.message + '\n' + err.stack);
   }
   quitGracefully();
 });
 
+// 启动顺序很重要
+// 1. 判断设备是否是桌面程序，如果是，初始化桌面程序（Electron），此时暂不显示
+// 2. 首先启动 Node 后台服务程序
+// 3. 加载 C++ DLL 服务程序
+// 4. 如果设备是桌面程序，则显示
+logger.info('process.pid', process.pid);
 
-// start application
 if (config.device === 'desktop') {
   initDesktop();
-  logger.info('desktop inited');
+  logger.info('Desktop inited');
 }
 
-startNodeServer().then(() => {
-  // load dll if need
-  if (config.dllName) {
-    const loadDll = require('./dll.js');
-    logger.info('loading dll');
-    return loadDll(nodeServer, config.dllName);
+async function bootstrap () {
+  try {
+    await startNodeServer();
+    if (config.dllName) {
+      logger.info('Loading dll');
+      await loadDll(app);
+      logger.info('Dll loaded');
+    }
+    if (config.device === 'desktop') {
+      app.$mainWindow.loadURL(ONLINE_URL);
+      app.$mainWindow.maximize();
+      logger.info('Desktop shown');
+    }
+  } catch (err) {
+    throw new Error(err.toString());
   }
-}).then(() => {
-  if (config.device === 'desktop') {
-    showDesktop();
-    logger.info('desktop shown');
-  }
-});
+}
+

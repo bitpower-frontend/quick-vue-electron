@@ -1,3 +1,10 @@
+/*
+@author Hisheng
+@since null
+@last-update 2019/01/30
+@description 用于 Node 日志打印的简单工具
+*/
+
 const chalk = require('chalk');
 
 module.exports = class Logger {
@@ -7,33 +14,41 @@ module.exports = class Logger {
       red: chalk.hex('#f04134'),
       orange: chalk.hex('#ffbf00'),
       green: chalk.hex('#00a854'),
-      blue: chalk.hex('#108ee9')
+      blue: chalk.hex('#108ee9'),
     };
     this.padLeft = `>>> ${flag}: `;
+    this.lastTime = (new Date()).getTime();
   }
 
   static get chalk() {
     return chalk;
   }
 
-  success(text) {
-    console.log(this.color.green(this.padLeft) + (text));
+  getTimeGap () {
+    const cureentTime = (new Date()).getTime();
+    const timeGap = cureentTime - this.lastTime;
+    this.lastTime = cureentTime;
+    return timeGap;
   }
 
-  info(text) {
-    console.log(this.color.blue(this.padLeft) + (text));
+  success(text, ...rest) {
+    console.log(this.color.green(this.padLeft) + (text), ...rest, `+${this.getTimeGap()} ms`);
   }
 
-  warn(text) {
-    console.log(this.color.orange(this.padLeft) + (text));
+  info(text, ...rest) {
+    console.log(this.color.blue(this.padLeft) + (text), ...rest, `+${this.getTimeGap()} ms`);
   }
 
-  error(text) {
-    console.log(this.color.red(this.padLeft) + (text));
+  warn(text, ...rest) {
+    console.log(this.color.orange(this.padLeft) + (text), ...rest, `+${this.getTimeGap()} ms`);
   }
 
-  fail(text) {
-    this.error(text);
+  error(text, ...rest) {
+    console.log(this.color.red(this.padLeft) + (text), ...rest, `+${this.getTimeGap()} ms`);
+  }
+
+  fail(text, ...rest) {
+    this.error(text, ...rest, `+${this.getTimeGap()} ms`);
   }
 
 };

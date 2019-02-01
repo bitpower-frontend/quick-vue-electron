@@ -1,7 +1,7 @@
 /*
 @author Hisheng
 @since null
-@last-update 2018/04/13
+@last-update 2019/02/01
 @description 应用全局配置文件
 */
 
@@ -24,4 +24,17 @@ module.exports = {
   device: 'desktop',
   // 加载的 DLL 名称
   dllName: '',
+  // 限制的 JSON 大小，KB
+  jsonLimitSize: 100 * 1024,
+  // 离线设置
+  offline: {
+    enabled: true,
+    // 自定义离线页面
+    page: null,
+  },
+  // 缓存设置
+  cache: {
+    // 缓存文件夹
+    folder: null,
+  },
 };

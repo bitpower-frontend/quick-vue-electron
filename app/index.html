@@ -13,6 +13,15 @@
     </div>
     <script>
       window.ELECTRON_DISABLE_SECURITY_WARNINGS = true;
+      // 数据请求模式
+      const requestMode = 'Electron IPC';
+      // 网络状况监测
+      const { ipcRenderer } = require('electron');
+      function onlineStatusChange () {
+        ipcRenderer.send('online-status-changed', navigator.onLine);
+      }
+      window.addEventListener('online', onlineStatusChange);
+      window.addEventListener('offline', onlineStatusChange);
     </script>
     <script src="/static/dist/vendor.bundle.js"></script>
     <script src="/static/dist/app.bundle.js"></script>
